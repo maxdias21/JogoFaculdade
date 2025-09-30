@@ -1,5 +1,3 @@
-from typing import List
-
 from code.Const import WIN_WIDTH
 from code.Enemy import Enemy
 from code.EnemyShot import EnemyShoot

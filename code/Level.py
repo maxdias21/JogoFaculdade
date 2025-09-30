@@ -1,6 +1,9 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-from code.Const import COLOR_WHITE, WIN_HEIGHT, MENU_OPTION, EVENT_ENEMY, SPAWN_TIME, COLOR_GREEN, COLOR_CYAN
+from pygame import Surface
+
+from code.Const import COLOR_WHITE, WIN_HEIGHT, MENU_OPTION, EVENT_ENEMY, SPAWN_TIME, COLOR_GREEN, COLOR_CYAN, \
+    EVENT_TIMEOUT, TIMEOUT_STEP, TIMEOUT_LEVEL
 from code.Enemy import Enemy
 from code.Entity import Entity
 from code.EntityMediator import EntityMediator
@@ -14,21 +17,26 @@ from code.Player import Player
 
 
 class Level:
-    def __init__(self, window, name, game_mode):
+    def __init__(self, window: Surface, name: str, game_mode: str, player_score: list[int]):
         self.window = window
+        self.timeout = TIMEOUT_LEVEL
         self.name = name
         self.game_mode = game_mode
         self.entity_list: list[Entity] = []
-        self.entity_list.extend(EntityFactory.get_entity('level1Bg'))
-        self.entity_list.append(EntityFactory.get_entity('Player1'))
-        self.timeout = 2000
+        self.entity_list.extend(EntityFactory.get_entity(self.name + 'Bg'))
+        player1 = EntityFactory.get_entity('Player1')
+        player1.score = player_score[0]
+        self.entity_list.append(player1)
 
         if (game_mode in [MENU_OPTION[1], MENU_OPTION[2]]):
-            self.entity_list.append(EntityFactory.get_entity('Player2'))
+            player2 = EntityFactory.get_entity('Player2')
+            player2.score = player_score[1]
+            self.entity_list.append(player2)
 
         pygame.time.set_timer(EVENT_ENEMY, SPAWN_TIME)
+        pygame.time.set_timer(EVENT_TIMEOUT, TIMEOUT_STEP)
 
-    def run(self, ):
+    def run(self, player_score: list[int]):
         pygame.mixer.music.load(f'./asset/{self.name}.mp3')
         pygame.mixer.music.play(-1)
         clock = pygame.time.Clock()
@@ -38,17 +46,19 @@ class Level:
                 self.window.blit(source=entity.surf, dest=entity.rect)
                 entity.move()
 
-                if isinstance(entity, (Player, Enemy)  ):
+                if isinstance(entity, (Player, Enemy)):
                     shoot = entity.shoot()
 
-                    if(shoot is not None):
+                    if (shoot is not None):
                         self.entity_list.append(shoot)
 
                 if entity.name == 'Player1':
-                    self.level_text(14, f'Player 1 - Health: {entity.health} | Score: {entity.score}', COLOR_GREEN, (10,25))
+                    self.level_text(14, f'Player 1 - Health: {entity.health} | Score: {entity.score}', COLOR_GREEN,
+                                    (10, 25))
 
                 if entity.name == 'Player2':
-                    self.level_text(14, f'Player 2 - Health: {entity.health} | Score: {entity.score}', COLOR_CYAN, (10,43))
+                    self.level_text(14, f'Player 2 - Health: {entity.health} | Score: {entity.score}', COLOR_CYAN,
+                                    (10, 43))
 
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
@@ -59,8 +69,24 @@ class Level:
                     choice = random.choice(('Enemy1', 'Enemy2'))
                     self.entity_list.append(EntityFactory.get_entity(choice))
 
+                if event.type == EVENT_TIMEOUT:
+                    self.timeout -= TIMEOUT_STEP
+                    if self.timeout == 0:
+                        for ent in self.entity_list:
+                            if isinstance(ent, Player) and ent.name == 'Player1':
+                                player_score[0] = ent.score
+                            if isinstance(ent, Player) and ent.name == 'Player2':
+                                player_score[1] = ent.score
+                        return True
 
+                found_player = False
 
+                for ent in self.entity_list:
+                    if isinstance(ent, Player):
+                        found_player = True
+
+                if not found_player:
+                    return False
 
             self.level_text(14, f'{self.name} - Timeout: {self.timeout / 1000:.1f}s', COLOR_WHITE, (10, 5))
             self.level_text(14, f'fps: {clock.get_fps() :.0f}', COLOR_WHITE, (10, WIN_HEIGHT - 35))
