@@ -103,10 +103,10 @@ ENTITY_HEALTH = {
 EVENT_TIMEOUT = pygame.USEREVENT + 2
 
 ENTITY_SHOOT_DELAY = {
-    'Player1': 20,
-    'Player2': 15,
-    'Enemy1': 300,
-    'Enemy2': 400,
+    'Player1': 30,
+    'Player2': 30,
+    'Enemy1': 100,
+    'Enemy2': 200,
 }
 
 MENU_OPTION = (
@@ -158,9 +158,9 @@ SCORE_POS = {'Title': (WIN_WIDTH / 2, 50),
              9: (WIN_WIDTH / 2, 290),
              }
 
-SPAWN_TIME = 4000
+SPAWN_TIME = 3000
 
 TIMEOUT_STEP = 100
-TIMEOUT_LEVEL = 100
+TIMEOUT_LEVEL = 90000
 
 
